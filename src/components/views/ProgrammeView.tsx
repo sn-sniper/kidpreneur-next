@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Target, Flag, Map, Play, BookOpen, Star, Zap } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useJourney } from '../../context/JourneyContext';
 
 const RULES = [
@@ -18,7 +18,7 @@ export const ProgrammeView: React.FC = () => {
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 space-y-10 animate-fadeIn">
       <div className="grid gap-8 lg:grid-cols-[.85fr_1.15fr]">
-        <aside className="rounded-[2rem] bg-cream p-8 border border-amber-100 shadow-sm flex flex-col justify-between">
+        <aside className="rounded-4xl bg-cream p-8 border border-amber-100 shadow-sm flex flex-col justify-between">
           <div>
             <span className="text-4xl">🧭</span>
             <h1 className="font-display text-3xl font-bold text-ink mt-4">

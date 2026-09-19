@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Lightbulb, Rocket } from 'lucide-react';
+import { Sparkles, ArrowRight,  Rocket } from 'lucide-react';
 import { useJourney } from '../../context/JourneyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -65,7 +65,7 @@ export const HomeView: React.FC = () => {
 
           <div className="relative mx-auto w-full max-w-lg">
             <div className="absolute -inset-4 rotate-3 rounded-[2.5rem] bg-sky/40"></div>
-            <div className="relative overflow-hidden rounded-4xl bg-linear-to-br from-indigo-900 via-navy to-ink p-8 text-white shadow-2xl min-h-[360px] flex flex-col justify-between">
+            <div className="relative overflow-hidden rounded-4xl bg-linear-to-br from-indigo-900 via-navy to-ink p-8 text-white shadow-2xl min-h-90 flex flex-col justify-between">
               <div className="flex justify-between items-start">
                 <span className="rounded-2xl bg-white/10 p-3 text-3xl">💡</span>
                 <span className="rounded-full bg-mint/20 px-3 py-1 text-xs font-bold text-mint">

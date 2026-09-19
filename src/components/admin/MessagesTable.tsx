@@ -13,7 +13,7 @@ import {
 export const MessagesTable = ({ messages }: { messages: ContactMessage[] }) => {
   return (
     <div className="w-full">
-      <div className="relative w-full max-h-[calc(100vh-220px)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="relative w-full max-h-[calc(100vh-220px)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
         <table className="w-full caption-bottom text-sm border-collapse">
           <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             <TableRow className="border-slate-100 border-b">
