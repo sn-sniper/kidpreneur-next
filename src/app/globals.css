@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #17324d;
+  --navy: #12304a;
+  --cream: #fff9e9;
+  --coral: #ff6b5d;
+  --sun: #ffc857;
+  --mint: #52c4aa;
+  --sky: #4db5e9;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-cream: var(--cream);
+  --color-coral: var(--coral);
+  --color-sun: var(--sun);
+  --color-mint: var(--mint);
+  --color-sky: var(--sky);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "DM Sans", sans-serif;
+  color: var(--ink);
+  background-color: var(--cream);
+}
+
+.font-display {
+  font-family: "Fraunces", serif;
+}
+
+.page-fade-enter {
+  animation: rise 0.38s ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(1px);
+  opacity: 0.9;
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-14px) rotate(5deg);
+  }
+}
+
+.road-dot {
+  box-shadow: 0 0 0 7px #fff9e9, 0 0 0 10px currentColor;
+}
+
+.session-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.session-card:hover {
+  transform: translateY(-5px) rotate(-0.4deg);
+  box-shadow: 0 18px 35px rgba(23, 50, 77, 0.13);
+}
+
+.session-card.completed {
+  border-color: #52c4aa;
+  background-color: #f1fffb;
+}
+
+.session-card.in-progress {
+  border-color: #ffc857;
+  background-color: #fffdf2;
+}
+
+.progress-ring-gradient {
+  background: conic-gradient(var(--mint) calc(var(--p, 0) * 1%), #e5edf2 0);
+}
+
+.quality-chip.active,
+.score-option.active {
+  background-color: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+
+.portfolio-book {
+  background: linear-gradient(90deg, #ffd86c 0 7%, #fffdf6 7% 93%, #ffd86c 93%);
+}
+
+.timer-dial {
+  background: conic-gradient(var(--coral) calc(var(--timer, 60) * 1.6667%), #eaf0f3 0);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #12304a;
+  outline-offset: 3px;
 }
