@@ -3,7 +3,8 @@ import { ViewName, SessionRecord, ToastMessage } from '../types';
 import { StorageService } from '../services/storageService';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 
 interface JourneyContextType {
   activeView: ViewName;

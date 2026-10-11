@@ -1,6 +1,8 @@
 'use server';
 
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { courseSessions, portfolioActivities } from '@/db/schema';
+import { eq, desc, asc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { initialActivities } from './activityData';
@@ -11,29 +13,24 @@ export async function updateSession(id: string, formData: FormData) {
   const objective = formData.get('objective') as string;
   const activityPayload = formData.get('activityPayload') as string;
 
-  await prisma.courseSession.update({
-    where: { id },
-    data: {
+  await db.update(courseSessions).set({
       title,
       description,
       objective,
       activityPayload
-    }
-  });
+  }).where(eq(courseSessions.id, id));
 
   revalidatePath('/admin');
   revalidatePath('/journey');
 }
 
 export async function createSession() {
-  const lastSession = await prisma.courseSession.findFirst({
-    orderBy: { sessionNumber: 'desc' }
-  });
+  const lastSessionResult = await db.select().from(courseSessions).orderBy(desc(courseSessions.sessionNumber)).limit(1);
+  const lastSession = lastSessionResult[0];
   
   const nextNum = lastSession ? lastSession.sessionNumber + 1 : 1;
 
-  const newSession = await prisma.courseSession.create({
-    data: {
+  const newSessionResult = await db.insert(courseSessions).values({
       sessionNumber: nextNum,
       title: `New Session ${nextNum}`,
       description: 'Enter a short description here.',
@@ -41,8 +38,8 @@ export async function createSession() {
       icon: '✨',
       activityType: 'dynamic_form',
       activityPayload: JSON.stringify({ fields: [] })
-    }
-  });
+  }).returning();
+  const newSession = newSessionResult[0];
 
   revalidatePath('/admin/sessions');
   revalidatePath('/journey');
@@ -50,24 +47,20 @@ export async function createSession() {
 }
 
 export async function deleteSession(id: string) {
-  const sessionToDelete = await prisma.courseSession.findUnique({ where: { id } });
+  const sessionToDeleteResult = await db.select().from(courseSessions).where(eq(courseSessions.id, id));
+  const sessionToDelete = sessionToDeleteResult[0];
   if (!sessionToDelete) return;
 
-  await prisma.courseSession.delete({
-    where: { id }
-  });
+  await db.delete(courseSessions).where(eq(courseSessions.id, id));
 
   // Reorder remaining sessions
-  const remaining = await prisma.courseSession.findMany({
-    orderBy: { sessionNumber: 'asc' }
-  });
+  const remaining = await db.select().from(courseSessions).orderBy(asc(courseSessions.sessionNumber));
 
   for (let i = 0; i < remaining.length; i++) {
     if (remaining[i].sessionNumber !== i + 1) {
-      await prisma.courseSession.update({
-        where: { id: remaining[i].id },
-        data: { sessionNumber: i + 1 }
-      });
+      await db.update(courseSessions)
+        .set({ sessionNumber: i + 1 })
+        .where(eq(courseSessions.id, remaining[i].id));
     }
   }
 
@@ -77,13 +70,11 @@ export async function deleteSession(id: string) {
 
 export async function publishInitialSessions() {
   // Clear any existing sessions so we can re-seed cleanly
-  await prisma.courseSession.deleteMany({});
+  await db.delete(courseSessions);
   
   // Seed the 15 activities from the PDF specification
   for (const activity of initialActivities) {
-    await prisma.courseSession.create({
-      data: activity
-    });
+    await db.insert(courseSessions).values(activity);
   }
 
   revalidatePath('/admin');
@@ -97,9 +88,7 @@ export async function createPortfolioActivity(formData: FormData) {
   const href = formData.get('href') as string;
   const orderIndex = parseInt(formData.get('orderIndex') as string) || 0;
 
-  await prisma.portfolioActivity.create({
-    data: { name, href, orderIndex }
-  });
+  await db.insert(portfolioActivities).values({ name, href, orderIndex });
 
   revalidatePath('/admin/portfolio');
 }
@@ -109,18 +98,13 @@ export async function updatePortfolioActivity(id: string, formData: FormData) {
   const href = formData.get('href') as string;
   const orderIndex = parseInt(formData.get('orderIndex') as string) || 0;
 
-  await prisma.portfolioActivity.update({
-    where: { id },
-    data: { name, href, orderIndex }
-  });
+  await db.update(portfolioActivities).set({ name, href, orderIndex }).where(eq(portfolioActivities.id, id));
 
   revalidatePath('/admin/portfolio');
 }
 
 export async function deletePortfolioActivity(id: string) {
-  await prisma.portfolioActivity.delete({
-    where: { id }
-  });
+  await db.delete(portfolioActivities).where(eq(portfolioActivities.id, id));
 
   revalidatePath('/admin/portfolio');
 }

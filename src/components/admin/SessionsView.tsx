@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 import { SessionsGrid } from './SessionsGrid';
 import { SessionsTable } from './SessionsTable';
 import { LayoutGrid, List } from 'lucide-react';

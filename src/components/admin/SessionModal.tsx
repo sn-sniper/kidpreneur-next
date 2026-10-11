@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import { updateSession } from '@/app/admin/actions';
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 import { ActivityFormBuilder } from './ActivityFormBuilder';
 
 export const SessionModal = ({ session, onClose }: { session: CourseSession, onClose: () => void }) => {

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { userProgress } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
@@ -27,18 +29,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
     }
 
+    const userId = payload.userId as string;
+
     // N-1 ENFORCEMENT: Server-side check
     // You cannot unlock Session N unless Session N-1 is "Completed" (except Session 1, which is always unlocked)
     if (sessionNum > 1) {
       const prevSessionNum = sessionNum - 1;
-      const prevSessionProgress = await prisma.userProgress.findUnique({
-        where: {
-          userId_sessionNumber: {
-            userId: payload.userId,
-            sessionNumber: prevSessionNum
-          }
-        }
-      });
+      const prevSessionProgressResult = await db.select().from(userProgress).where(and(eq(userProgress.userId, userId), eq(userProgress.sessionNumber, prevSessionNum)));
+      const prevSessionProgress = prevSessionProgressResult[0];
 
       if (!prevSessionProgress || prevSessionProgress.status !== 'Completed') {
         return NextResponse.json({ 
@@ -48,20 +46,9 @@ export async function POST(request: Request) {
     }
 
     // Unlock the session by creating a record if it doesn't exist
-    await prisma.userProgress.upsert({
-      where: {
-        userId_sessionNumber: {
-          userId: payload.userId,
-          sessionNumber: Number(sessionNum)
-        }
-      },
-      update: {}, // Do nothing if it already exists
-      create: {
-        userId: payload.userId,
-        sessionNumber: Number(sessionNum),
-        status: 'Unlocked'
-      }
-    });
+    await db.insert(userProgress)
+      .values({ userId, sessionNumber: Number(sessionNum), status: 'Unlocked' })
+      .onConflictDoNothing({ target: [userProgress.userId, userProgress.sessionNumber] });
 
     return NextResponse.json({ success: true });
   } catch (error) {

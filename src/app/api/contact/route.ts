@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { contactMessages } from '@/db/schema';
 
 export async function POST(request: Request) {
   try {
@@ -10,12 +11,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Name, email, and message are required' }, { status: 400 });
     }
 
-    const newContactMessage = await prisma.contactMessage.create({
-      data: {
+    await db.insert(contactMessages).values({
         name,
         email,
         message,
-      }
     });
 
     return NextResponse.json({ success: true, message: 'Message sent successfully!' }, { status: 201 });

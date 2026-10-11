@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { labRegistrations, users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
@@ -16,7 +18,7 @@ function generateRandomString(length: number) {
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
+    const token = cookieStore.get('admin_token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,9 +39,8 @@ export async function POST(request: Request) {
     }
 
     // 1. Find registration
-    const registration = await prisma.labRegistration.findUnique({
-      where: { id: registrationId }
-    });
+    const registrationResult = await db.select().from(labRegistrations).where(eq(labRegistrations.id, registrationId));
+    const registration = registrationResult[0];
 
     if (!registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
@@ -62,26 +63,21 @@ export async function POST(request: Request) {
     const passwordHash = await bcrypt.hash(rawPassword, salt);
 
     // 5. Create child User record
-    await prisma.$transaction(async (tx) => {
-      const childUser = await tx.user.create({
-        data: {
+    await db.transaction(async (tx) => {
+      const childUserResult = await tx.insert(users).values({
           email: childEmail,
           passwordHash,
           fullName: registration.childFullName,
           role: 'STUDENT',
           parentId: registration.parentId
-        }
-      });
+      }).returning();
 
       // 6. Update registration status and save creds
-      await tx.labRegistration.update({
-        where: { id: registrationId },
-        data: { 
+      await tx.update(labRegistrations).set({
           status: 'CONFIRMED',
           generatedEmail: childEmail,
           generatedPassword: rawPassword
-        }
-      });
+      }).where(eq(labRegistrations.id, registrationId));
     });
 
     // 7. Dispatch email mock (console log in this demo)

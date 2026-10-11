@@ -1,11 +1,11 @@
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { contactMessages } from '@/db/schema';
+import { desc } from 'drizzle-orm';
 import { MessageSquare, Mail, Calendar } from 'lucide-react';
 import { MessagesTable } from '@/components/admin/MessagesTable';
 
 export default async function MessagesAdmin() {
-  const messages = await prisma.contactMessage.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
+  const messages = await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
 
   return (
     <div className="max-w-4xl">

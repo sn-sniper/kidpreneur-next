@@ -1,12 +1,11 @@
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { User as UserIcon, Eye } from 'lucide-react';
 
 export default async function LearnersAdmin() {
-  const learners = await prisma.user.findMany({
-    where: { role: 'STUDENT' },
-    orderBy: { createdAt: 'desc' }
-  });
+  const learners = await db.select().from(users).where(eq(users.role, 'STUDENT')).orderBy(desc(users.createdAt));
 
   return (
     <div className="max-w-4xl">

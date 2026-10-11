@@ -1,4 +1,6 @@
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users, globalLearnerStates, activityStates } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { ArrowLeft, User as UserIcon, Database } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -8,17 +10,23 @@ export default async function LearnerDetail({ params }: { params: { id: string }
   const resolvedParams = await Promise.resolve(params);
   const learnerId = resolvedParams.id;
 
-  const learner = await prisma.user.findUnique({
-    where: { id: learnerId },
-    include: {
-      globalLearnerState: true,
-      activityStates: true
-    }
-  });
+  const learnerResult = await db.select().from(users).where(eq(users.id, learnerId));
+  const learnerData = learnerResult[0];
 
-  if (!learner) {
+  if (!learnerData) {
     notFound();
   }
+
+  const globalStateResult = await db.select().from(globalLearnerStates).where(eq(globalLearnerStates.userId, learnerId));
+  const globalState = globalStateResult[0];
+
+  const activityStatesData = await db.select().from(activityStates).where(eq(activityStates.userId, learnerId));
+
+  const learner = {
+      ...learnerData,
+      globalLearnerState: globalState,
+      activityStates: activityStatesData
+  };
 
   const globalData = learner.globalLearnerState?.data 
     ? JSON.parse(learner.globalLearnerState.data) 
@@ -78,7 +86,7 @@ export default async function LearnerDetail({ params }: { params: { id: string }
                   <div key={state.id} className="border border-slate-200 rounded-lg overflow-hidden">
                     <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
                       <span className="font-semibold text-slate-700">{state.activityId}</span>
-                      <span className="text-xs text-slate-400">{new Date(state.updatedAt).toLocaleString()}</span>
+                      <span className="text-xs text-slate-400">{state.updatedAt ? new Date(state.updatedAt).toLocaleString() : ''}</span>
                     </div>
                     <pre className="p-4 text-xs text-slate-600 overflow-x-auto whitespace-pre-wrap font-mono">
                       {JSON.stringify(parsed, null, 2)}

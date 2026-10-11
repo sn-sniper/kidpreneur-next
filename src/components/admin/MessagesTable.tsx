@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { ContactMessage } from '@prisma/client';
+import type { contactMessages } from '@/db/schema';
+type ContactMessage = typeof contactMessages.$inferSelect;
 import {
   TableBody,
   TableCell,
@@ -45,9 +46,9 @@ export const MessagesTable = ({ messages }: { messages: ContactMessage[] }) => {
                   {msg.message}
                 </TableCell>
                 <TableCell className="text-right text-slate-400 text-xs align-top">
-                  {new Date(msg.createdAt).toLocaleDateString()}
+                  {msg.createdAt ? new Date(msg.createdAt).toLocaleDateString() : ''}
                   <br />
-                  {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
                 </TableCell>
               </TableRow>
             ))}

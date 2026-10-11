@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react';
 import { updateSession, deleteSession } from '@/app/admin/actions';
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 import { useRouter } from 'next/navigation';
 import { ActivityFormBuilder } from './ActivityFormBuilder';
 

@@ -1,10 +1,10 @@
 import App from '../App';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { courseSessions } from '@/db/schema';
+import { asc } from 'drizzle-orm';
 
 export default async function Home() {
-  const sessions = await prisma.courseSession.findMany({
-    orderBy: { sessionNumber: 'asc' }
-  });
+  const sessions = await db.select().from(courseSessions).orderBy(asc(courseSessions.sessionNumber));
   
   return <App initialSessions={sessions} />;
 }

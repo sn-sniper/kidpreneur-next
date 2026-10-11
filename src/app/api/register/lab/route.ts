@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users, labRegistrations } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
@@ -14,22 +16,19 @@ export async function POST(request: Request) {
       childAge,
     } = body;
 
-    let parentUser = await prisma.user.findUnique({
-      where: { email: parentEmail }
-    });
+    const parentUserResult = await db.select().from(users).where(eq(users.email, parentEmail));
+    let parentUser = parentUserResult[0];
 
     if (!parentUser) {
-      parentUser = await prisma.user.create({
-        data: {
+      const insertUserResult = await db.insert(users).values({
           email: parentEmail,
           fullName: parentFullName,
           role: 'PARENT'
-        }
-      });
+      }).returning();
+      parentUser = insertUserResult[0];
     }
 
-    const registration = await prisma.labRegistration.create({
-      data: {
+    const registrationResult = await db.insert(labRegistrations).values({
         parentId: parentUser.id,
         parentFullName,
         parentPhone,
@@ -37,8 +36,8 @@ export async function POST(request: Request) {
         childFullName,
         childAge,
         status: 'PENDING'
-      }
-    });
+    }).returning();
+    const registration = registrationResult[0];
 
     return NextResponse.json({ success: true, registrationId: registration.id }, { status: 200 });
 

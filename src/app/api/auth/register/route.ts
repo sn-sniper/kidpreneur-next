@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { signToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
@@ -14,9 +16,8 @@ export async function POST(request: Request) {
     }
 
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    const existingUserResult = await db.select().from(users).where(eq(users.email, email));
+    const existingUser = existingUserResult[0];
 
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 409 });
@@ -27,14 +28,13 @@ export async function POST(request: Request) {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
+    const insertResult = await db.insert(users).values({
         email,
         passwordHash,
         fullName,
         role: 'STUDENT'
-      }
-    });
+    }).returning();
+    const user = insertResult[0];
 
     // Create JWT
     const token = await signToken({ userId: user.id, role: user.role });

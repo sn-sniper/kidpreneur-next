@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { activityStates, globalLearnerStates } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +19,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = payload.userId;
+    const userId = payload.userId as string;
     const { searchParams } = new URL(request.url);
     const activityId = searchParams.get('activityId');
 
@@ -25,19 +27,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'activityId is required' }, { status: 400 });
     }
 
-    const [activityState, globalState] = await Promise.all([
-      prisma.activityState.findUnique({
-        where: {
-          userId_activityId: {
-            userId,
-            activityId
-          }
-        }
-      }),
-      prisma.globalLearnerState.findUnique({
-        where: { userId }
-      })
+    const [activityStateResult, globalStateResult] = await Promise.all([
+      db.select().from(activityStates).where(and(eq(activityStates.userId, userId), eq(activityStates.activityId, activityId))),
+      db.select().from(globalLearnerStates).where(eq(globalLearnerStates.userId, userId))
     ]);
+
+    const activityState = activityStateResult[0];
+    const globalState = globalStateResult[0];
 
     let activityData = {};
     if (activityState && activityState.data) {

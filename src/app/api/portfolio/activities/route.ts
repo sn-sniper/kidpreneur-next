@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { portfolioActivities } from '@/db/schema';
+import { asc } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const activities = await prisma.portfolioActivity.findMany({
-      orderBy: {
-        orderIndex: 'asc'
-      }
-    });
+    const activities = await db.select().from(portfolioActivities).orderBy(asc(portfolioActivities.orderIndex));
 
     return NextResponse.json({ activities }, { status: 200 });
   } catch (error: any) {

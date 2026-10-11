@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { activityStates, globalLearnerStates } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = payload.userId;
+    const userId = payload.userId as string;
     const body = await request.json();
     const { activityId, activityData, globalData } = body;
 
@@ -29,30 +31,18 @@ export async function POST(request: Request) {
     if (activityData) {
       const dataStr = JSON.stringify(activityData);
       
-      await prisma.activityState.upsert({
-        where: {
-          userId_activityId: {
-            userId,
-            activityId
-          }
-        },
-        update: {
-          data: dataStr
-        },
-        create: {
-          userId,
-          activityId,
-          data: dataStr
-        }
-      });
+      await db.insert(activityStates)
+        .values({ userId, activityId, data: dataStr })
+        .onConflictDoUpdate({
+            target: [activityStates.userId, activityStates.activityId],
+            set: { data: dataStr }
+        });
     }
 
     // 2. Upsert GlobalLearnerState (Carry-Forward fields)
     if (globalData) {
-      // We merge existing global data with the new incoming globalData
-      const existingGlobal = await prisma.globalLearnerState.findUnique({
-        where: { userId }
-      });
+      const existingGlobalResult = await db.select().from(globalLearnerStates).where(eq(globalLearnerStates.userId, userId));
+      const existingGlobal = existingGlobalResult[0];
 
       let mergedData = globalData;
       if (existingGlobal && existingGlobal.data) {
@@ -64,16 +54,12 @@ export async function POST(request: Request) {
         }
       }
 
-      await prisma.globalLearnerState.upsert({
-        where: { userId },
-        update: {
-          data: JSON.stringify(mergedData)
-        },
-        create: {
-          userId,
-          data: JSON.stringify(mergedData)
-        }
-      });
+      await db.insert(globalLearnerStates)
+        .values({ userId, data: JSON.stringify(mergedData) })
+        .onConflictDoUpdate({
+            target: [globalLearnerStates.userId],
+            set: { data: JSON.stringify(mergedData) }
+        });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

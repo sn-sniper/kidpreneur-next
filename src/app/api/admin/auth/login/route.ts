@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { signToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
@@ -14,9 +16,8 @@ export async function POST(request: Request) {
     }
 
     // Find admin user
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+    const userResult = await db.select().from(users).where(eq(users.email, email));
+    const user = userResult[0];
 
     if (!user || !user.passwordHash || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Invalid credentials or insufficient permissions' }, { status: 401 });

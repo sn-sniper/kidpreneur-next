@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 import { useRouter } from 'next/navigation';
 import {
   TableBody,

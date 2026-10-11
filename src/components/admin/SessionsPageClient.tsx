@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { CourseSession } from '@prisma/client';
+import type { courseSessions } from '@/db/schema';
+type CourseSession = typeof courseSessions.$inferSelect;
 import { Settings, RefreshCw, Plus } from 'lucide-react';
 import { SessionsView } from './SessionsView';
 import { SessionEditor } from './SessionEditor';

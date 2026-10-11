@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { userProgress } from '@/db/schema';
+import { eq, asc } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth';
 
 // GET: Retrieve all records for the current user
@@ -14,10 +16,9 @@ export async function GET() {
     const payload = await verifyToken(token);
     if (!payload?.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const progress = await prisma.userProgress.findMany({
-      where: { userId: payload.userId },
-      orderBy: { sessionNumber: 'asc' }
-    });
+    const userId = payload.userId as string;
+
+    const progress = await db.select().from(userProgress).where(eq(userProgress.userId, userId)).orderBy(asc(userProgress.sessionNumber));
 
     // Map Prisma to frontend format
     const records = progress.map(p => ({
@@ -60,29 +61,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing session_number' }, { status: 400 });
     }
 
+    const userId = payload.userId as string;
+
     // Upsert the record
-    await prisma.userProgress.upsert({
-      where: {
-        userId_sessionNumber: {
-          userId: payload.userId,
-          sessionNumber: Number(session_number)
-        }
-      },
-      update: {
-        status,
-        notes,
-        reflection,
-        completedAt: completed_at ? new Date(completed_at) : null
-      },
-      create: {
-        userId: payload.userId,
-        sessionNumber: Number(session_number),
-        status,
-        notes,
-        reflection,
-        completedAt: completed_at ? new Date(completed_at) : null
-      }
-    });
+    await db.insert(userProgress)
+      .values({
+          userId,
+          sessionNumber: Number(session_number),
+          status,
+          notes,
+          reflection,
+          completedAt: completed_at ? new Date(completed_at) : null
+      })
+      .onConflictDoUpdate({
+          target: [userProgress.userId, userProgress.sessionNumber],
+          set: {
+              status,
+              notes,
+              reflection,
+              completedAt: completed_at ? new Date(completed_at) : null
+          }
+      });
 
     return NextResponse.json({ success: true });
   } catch (error) {

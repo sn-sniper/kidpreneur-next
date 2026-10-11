@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
-import prisma from '@/lib/db';
+import { db } from '@/lib/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -18,16 +20,14 @@ export async function GET() {
       return NextResponse.json({ user: null }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        role: true,
-        createdAt: true
-      }
-    });
+    const userResult = await db.select({
+        id: users.id,
+        email: users.email,
+        fullName: users.fullName,
+        role: users.role,
+        createdAt: users.createdAt
+    }).from(users).where(eq(users.id, payload.userId as string));
+    const user = userResult[0];
 
     if (!user) {
       return NextResponse.json({ user: null }, { status: 401 });
