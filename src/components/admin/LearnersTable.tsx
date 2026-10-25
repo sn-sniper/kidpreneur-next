@@ -110,28 +110,35 @@ export const LearnersTable = () => {
       </div>
 
       <Dialog open={credsDialog.isOpen} onOpenChange={(open) => !open && setCredsDialog({ isOpen: false, creds: null })}>
-        <DialogContent>
+        <DialogContent className="bg-white max-w-md w-full p-6 rounded-3xl shadow-2xl border border-slate-100">
           <DialogHeader>
-            <DialogTitle>Child Account Generated Successfully!</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-bold text-slate-900">Child Account Generated Successfully!</DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 mt-1">
               The account has been created and the parent has been notified via email. 
               Here are the generated credentials:
             </DialogDescription>
           </DialogHeader>
           {credsDialog.creds && (
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4 space-y-3">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-4 space-y-3">
               <div>
-                <span className="block text-xs font-bold text-slate-500 uppercase">Email Username</span>
-                <span className="font-mono text-ink text-lg">{credsDialog.creds.email}</span>
+                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email Username</span>
+                <span className="font-mono text-ink text-base select-all font-semibold block bg-white px-3 py-2 rounded-lg border border-slate-200">
+                  {credsDialog.creds.email}
+                </span>
               </div>
               <div>
-                <span className="block text-xs font-bold text-slate-500 uppercase">Password</span>
-                <span className="font-mono text-ink text-lg">{credsDialog.creds.password}</span>
+                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Password</span>
+                <span className="font-mono text-ink text-base select-all font-semibold block bg-white px-3 py-2 rounded-lg border border-slate-200">
+                  {credsDialog.creds.password}
+                </span>
               </div>
             </div>
           )}
-          <div className="mt-4 flex justify-end">
-            <Button onClick={() => setCredsDialog({ isOpen: false, creds: null })}>
+          <div className="mt-6 flex justify-end">
+            <Button 
+              onClick={() => setCredsDialog({ isOpen: false, creds: null })}
+              className="px-6 py-2 rounded-xl"
+            >
               Close
             </Button>
           </div>

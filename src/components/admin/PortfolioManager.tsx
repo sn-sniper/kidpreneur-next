@@ -78,6 +78,101 @@ export const PortfolioManager: React.FC = () => {
   // Media Picker Sub-modal
   const [mediaPickerTarget, setMediaPickerTarget] = useState<'cover' | 'gallery' | null>(null);
 
+  // Instagram Activity Engine State
+  const [isEngineOpen, setIsEngineOpen] = useState(false);
+  const [engineUrl, setEngineUrl] = useState('');
+  const [engineLoading, setEngineLoading] = useState(false);
+  const [engineError, setEngineError] = useState<string | null>(null);
+  const [engineData, setEngineData] = useState<any | null>(null);
+  const [enginePublishing, setEnginePublishing] = useState(false);
+
+  const [engineTitle, setEngineTitle] = useState('');
+  const [engineType, setEngineType] = useState<'WORKSHOP' | 'ACTIVITY' | 'INSTAGRAM'>('INSTAGRAM');
+  const [engineStatus, setEngineStatus] = useState<'UPCOMING' | 'COMPLETED'>('COMPLETED');
+  const [engineSummary, setEngineSummary] = useState('');
+  const [engineEventDate, setEngineEventDate] = useState('');
+  const [engineLocation, setEngineLocation] = useState('Innovation Hub, Beirut & Online');
+  const [engineCoverUrl, setEngineCoverUrl] = useState('');
+
+  const handleEngineFetch = async () => {
+    if (!engineUrl.trim()) {
+      setEngineError('Please enter an Instagram post or reel URL');
+      return;
+    }
+    try {
+      setEngineLoading(true);
+      setEngineError(null);
+      const res = await fetch('/api/admin/instagram/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: engineUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch Instagram post');
+      }
+
+      setEngineData(data);
+      setEngineTitle(data.title || '');
+      setEngineSummary(data.summary || '');
+      setEngineCoverUrl(data.coverImageUrl || '');
+      setEngineType(data.suggestedType || 'INSTAGRAM');
+      setEngineStatus(data.suggestedStatus || 'COMPLETED');
+      if (data.suggestedType === 'WORKSHOP') {
+        setEngineEventDate('Upcoming Cohort 2026');
+      }
+    } catch (err: any) {
+      setEngineError(err.message || 'Error parsing Instagram URL');
+    } finally {
+      setEngineLoading(false);
+    }
+  };
+
+  const handleEnginePublish = async () => {
+    if (!engineTitle.trim()) {
+      alert('Please specify an activity title');
+      return;
+    }
+    try {
+      setEnginePublishing(true);
+      const res = await fetch('/api/admin/portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: engineTitle,
+          type: engineType,
+          status: engineStatus,
+          summary: engineSummary,
+          content: engineData?.content || engineSummary,
+          coverImageUrl: engineCoverUrl,
+          instagramUrl: engineData?.instagramUrl || engineUrl,
+          eventDate: engineEventDate || undefined,
+          location: engineLocation,
+          category: engineType === 'WORKSHOP' ? 'Upcoming Workshop' : engineType === 'ACTIVITY' ? 'Past Activities' : 'Instagram Posts',
+          ctaText: engineType === 'WORKSHOP' ? 'Reserve a Seat in the Lab' : engineType === 'ACTIVITY' ? 'Join Next Cohort' : 'Follow @kidpreneur.journey',
+          ctaUrl: engineType === 'WORKSHOP' ? 'https://lab.the-kidpreneur-journey.com/register/lab' : engineData?.instagramUrl || engineUrl,
+          isFeatured: 1,
+          isPublished: 1,
+          orderIndex: items.length + 1,
+        }),
+      });
+
+      if (res.ok) {
+        setIsEngineOpen(false);
+        setEngineUrl('');
+        setEngineData(null);
+        fetchItems();
+      } else {
+        const err = await res.json();
+        alert(`Failed to publish: ${err.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert('Error publishing activity');
+    } finally {
+      setEnginePublishing(false);
+    }
+  };
+
   // Form State
   const [formData, setFormData] = useState<Partial<PortfolioItem>>({
     title: '',
@@ -281,13 +376,28 @@ export const PortfolioManager: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Portfolio Item
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setEngineUrl('');
+              setEngineData(null);
+              setEngineError(null);
+              setIsEngineOpen(true);
+            }}
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-sm"
+          >
+            <InstagramIcon className="w-4 h-4" />
+            <span>Instagram Engine</span>
+          </button>
+
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-sm"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Item</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters & Search */}
@@ -306,17 +416,22 @@ export const PortfolioManager: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Type Filter */}
           <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-medium">
-            {['ALL', 'WORKSHOP', 'ACTIVITY', 'INSTAGRAM'].map(t => (
+            {[
+              { id: 'ALL', label: 'All Types' },
+              { id: 'WORKSHOP', label: 'Upcoming Workshops' },
+              { id: 'ACTIVITY', label: 'Past Activities' },
+              { id: 'INSTAGRAM', label: 'Instagram Posts' },
+            ].map(t => (
               <button
-                key={t}
-                onClick={() => setSelectedType(t)}
+                key={t.id}
+                onClick={() => setSelectedType(t.id)}
                 className={`px-3 py-1.5 rounded-lg transition-colors ${
-                  selectedType === t
+                  selectedType === t.id
                     ? 'bg-white text-slate-800 shadow-sm font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {t === 'ALL' ? 'All Types' : t.charAt(0) + t.slice(1).toLowerCase()}
+                {t.label}
               </button>
             ))}
           </div>
@@ -910,6 +1025,216 @@ export const PortfolioManager: React.FC = () => {
                   setMediaPickerTarget(null);
                 }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instagram Activity Engine Modal */}
+      {isEngineOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col p-6 shadow-2xl overflow-hidden animate-fadeIn">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-600 text-white flex items-center justify-center">
+                  <InstagramIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-lg">Instagram Activity Engine</h3>
+                  <p className="text-xs text-slate-500">Auto-convert any Instagram post or reel into a website activity</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEngineOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto py-5 space-y-6">
+              {/* URL Input Box */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Paste Instagram Post or Reel URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="https://www.instagram.com/p/... or /reel/..."
+                    value={engineUrl}
+                    onChange={e => setEngineUrl(e.target.value)}
+                    className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none bg-slate-50/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleEngineFetch}
+                    disabled={engineLoading || !engineUrl.trim()}
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-colors"
+                  >
+                    {engineLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch Post'}
+                  </button>
+                </div>
+                {engineError && (
+                  <p className="text-xs text-red-500 font-medium mt-2">{engineError}</p>
+                )}
+              </div>
+
+              {/* Parsed Post Preview & Activity Type Selector */}
+              {engineData && (
+                <div className="space-y-6 border-t border-slate-100 pt-6 animate-fadeIn">
+                  {/* Select Activity Type */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                      Choose Target Activity Type
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Upcoming Workshop */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEngineType('WORKSHOP');
+                          setEngineStatus('UPCOMING');
+                          if (!engineEventDate) setEngineEventDate('Upcoming Cohort 2026');
+                        }}
+                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                          engineType === 'WORKSHOP'
+                            ? 'border-teal-500 bg-teal-50/50 ring-2 ring-teal-500/20 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">🚀</span>
+                        <h4 className="font-bold text-slate-800 text-xs sm:text-sm">Upcoming Workshop</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Registration open for young learners</p>
+                      </button>
+
+                      {/* Past Activities */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEngineType('ACTIVITY');
+                          setEngineStatus('COMPLETED');
+                        }}
+                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                          engineType === 'ACTIVITY'
+                            ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/20 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">🏆</span>
+                        <h4 className="font-bold text-slate-800 text-xs sm:text-sm">Past Activities</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Showcase past cohort & market milestone</p>
+                      </button>
+
+                      {/* Instagram Posts */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEngineType('INSTAGRAM');
+                          setEngineStatus('COMPLETED');
+                        }}
+                        className={`p-3.5 rounded-2xl border text-left transition-all ${
+                          engineType === 'INSTAGRAM'
+                            ? 'border-pink-500 bg-pink-50/50 ring-2 ring-pink-500/20 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="text-xl block mb-1">📸</span>
+                        <h4 className="font-bold text-slate-800 text-xs sm:text-sm">Instagram Posts</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Reels, F.A.I.L. lessons & classroom clips</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Post Preview Card */}
+                  <div className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 items-start">
+                    <img
+                      src={engineCoverUrl}
+                      alt="Thumbnail"
+                      className="w-20 h-20 rounded-xl object-cover shrink-0 border border-slate-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">
+                          {engineData.author || '@kidpreneur.journey'}
+                        </span>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs text-slate-500">Auto-detected: <strong>{engineData.suggestedType}</strong></span>
+                      </div>
+                      <p className="text-xs text-slate-700 line-clamp-2 italic">"{engineData.summary}"</p>
+                    </div>
+                  </div>
+
+                  {/* Form Adjustments */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Activity Title</label>
+                      <input
+                        type="text"
+                        value={engineTitle}
+                        onChange={e => setEngineTitle(e.target.value)}
+                        className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Event Date / Cohort</label>
+                        <input
+                          type="text"
+                          value={engineEventDate}
+                          onChange={e => setEngineEventDate(e.target.value)}
+                          placeholder="e.g. May 15, 2026 or Spring 2026"
+                          className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Location</label>
+                        <input
+                          type="text"
+                          value={engineLocation}
+                          onChange={e => setEngineLocation(e.target.value)}
+                          className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Summary Teaser</label>
+                      <textarea
+                        rows={3}
+                        value={engineSummary}
+                        onChange={e => setEngineSummary(e.target.value)}
+                        className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsEngineOpen(false)}
+                className="px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-xl transition-colors font-medium"
+              >
+                Close
+              </button>
+              {engineData && (
+                <button
+                  type="button"
+                  onClick={handleEnginePublish}
+                  disabled={enginePublishing}
+                  className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all text-sm"
+                >
+                  {enginePublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <span>Publish Activity to Website</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
