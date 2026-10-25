@@ -110,7 +110,10 @@ export const LearnersTable = () => {
       </div>
 
       <Dialog open={credsDialog.isOpen} onOpenChange={(open) => !open && setCredsDialog({ isOpen: false, creds: null })}>
-        <DialogContent className="bg-white max-w-md w-full p-6 rounded-3xl shadow-2xl border border-slate-100">
+        <DialogContent 
+          style={{ backgroundColor: '#ffffff' }}
+          className="!bg-white bg-white max-w-md w-full p-6 rounded-3xl shadow-2xl border border-slate-100"
+        >
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-900">Child Account Generated Successfully!</DialogTitle>
             <DialogDescription className="text-sm text-slate-500 mt-1">
