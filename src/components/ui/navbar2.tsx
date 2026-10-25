@@ -181,10 +181,12 @@ export default function Navbar2() {
           {/* Top row */}
           <div className="flex items-center justify-between gap-4 px-6 py-4 sm:px-8">
             {/* Logo */}
-            <Link href="/" className="flex shrink-0 items-center gap-2">
-              <span className="text-[1.35rem] font-semibold tracking-tight text-zinc-900">
-                Bag\Ui
-              </span>
+            <Link href="/" className="flex shrink-0 items-center gap-2 group py-0.5">
+              <img
+                src="/logo.jpg"
+                alt="The Kidpreneur Journey"
+                className="h-10 sm:h-12 w-auto object-contain rounded-xl shadow-xs group-hover:scale-[1.02] transition-transform"
+              />
             </Link>
 
             {/* Desktop nav */}

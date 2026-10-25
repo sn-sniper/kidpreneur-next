@@ -17,11 +17,18 @@ interface AdminSidebarProps {
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activities }) => {
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen overflow-y-auto shrink-0">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <LayoutDashboard className="w-6 h-6 text-teal-400" />
-          Admin Panel
-        </h2>
+      <div className="p-6 border-b border-slate-800/80">
+        <Link href="/admin" className="flex items-center gap-3 group">
+          <img
+            src="/logo.jpg"
+            alt="The Kidpreneur Journey"
+            className="w-11 h-11 rounded-xl object-contain bg-amber-400 p-0.5 shadow-md ring-1 ring-amber-300/40 group-hover:scale-105 transition-transform"
+          />
+          <div>
+            <h2 className="text-base font-bold text-white tracking-tight leading-tight">Admin Portal</h2>
+            <p className="text-[11px] text-teal-400 font-medium">Kidpreneur Journey</p>
+          </div>
+        </Link>
       </div>
       
       <nav className="flex-1 px-4 space-y-1.5 mt-2">
