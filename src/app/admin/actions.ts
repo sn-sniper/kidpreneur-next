@@ -5,9 +5,26 @@ import { courseSessions, portfolioActivities } from '@/db/schema';
 import { eq, desc, asc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 import { initialActivities } from './activityData';
 
+async function assertAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin_token')?.value;
+  if (!token) {
+    throw new Error('Unauthorized: Admin session required');
+  }
+  const payload = await verifyToken(token);
+  if (!payload || payload.role !== 'ADMIN') {
+    throw new Error('Unauthorized: Admin privileges required');
+  }
+  return payload;
+}
+
 export async function updateSession(id: string, formData: FormData) {
+  await assertAdmin();
+
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const objective = formData.get('objective') as string;
@@ -25,6 +42,8 @@ export async function updateSession(id: string, formData: FormData) {
 }
 
 export async function createSession() {
+  await assertAdmin();
+
   const lastSessionResult = await db.select().from(courseSessions).orderBy(desc(courseSessions.sessionNumber)).limit(1);
   const lastSession = lastSessionResult[0];
   
@@ -47,6 +66,8 @@ export async function createSession() {
 }
 
 export async function deleteSession(id: string) {
+  await assertAdmin();
+
   const sessionToDeleteResult = await db.select().from(courseSessions).where(eq(courseSessions.id, id));
   const sessionToDelete = sessionToDeleteResult[0];
   if (!sessionToDelete) return;
@@ -69,6 +90,8 @@ export async function deleteSession(id: string) {
 }
 
 export async function publishInitialSessions() {
+  await assertAdmin();
+
   // Clear any existing sessions so we can re-seed cleanly
   await db.delete(courseSessions);
   
@@ -84,6 +107,8 @@ export async function publishInitialSessions() {
 // --- PORTFOLIO ACTIVITIES (FRONTEND) ---
 
 export async function createPortfolioActivity(formData: FormData) {
+  await assertAdmin();
+
   const name = formData.get('name') as string;
   const href = formData.get('href') as string;
   const orderIndex = parseInt(formData.get('orderIndex') as string) || 0;
@@ -94,6 +119,8 @@ export async function createPortfolioActivity(formData: FormData) {
 }
 
 export async function updatePortfolioActivity(id: string, formData: FormData) {
+  await assertAdmin();
+
   const name = formData.get('name') as string;
   const href = formData.get('href') as string;
   const orderIndex = parseInt(formData.get('orderIndex') as string) || 0;
@@ -104,6 +131,8 @@ export async function updatePortfolioActivity(id: string, formData: FormData) {
 }
 
 export async function deletePortfolioActivity(id: string) {
+  await assertAdmin();
+
   await db.delete(portfolioActivities).where(eq(portfolioActivities.id, id));
 
   revalidatePath('/admin/portfolio');

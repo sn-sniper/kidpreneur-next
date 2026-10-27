@@ -11,7 +11,7 @@ async function checkAdminAuth(request: NextRequest) {
   const token = cookieStore.get("admin_token")?.value || request.headers.get("Authorization")?.replace("Bearer ", "");
   if (!token) return false;
   const payload = await verifyToken(token);
-  return Boolean(payload?.userId);
+  return Boolean(payload?.userId && payload?.role === "ADMIN");
 }
 
 export async function GET(request: NextRequest) {

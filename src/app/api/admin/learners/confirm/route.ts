@@ -25,10 +25,8 @@ export async function POST(request: Request) {
     }
 
     const payload = await verifyToken(token);
-    // Assuming simple authorization where admin checking exists. 
-    // In a real app we'd verify the role here.
-    if (!payload || !payload.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!payload || !payload.userId || payload.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized: Admin privileges required' }, { status: 401 });
     }
 
     const body = await request.json();

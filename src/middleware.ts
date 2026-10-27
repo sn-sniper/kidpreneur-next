@@ -7,10 +7,33 @@ const getJwtSecretKey = () => {
   return new TextEncoder().encode(secret);
 };
 
+const ALLOWED_ORIGINS = [
+  'https://the-kidpreneur-journey.com',
+  'https://admin.the-kidpreneur-journey.com',
+  'https://lab.the-kidpreneur-journey.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+];
+
+function getCorsOrigin(requestOrigin: string | null): string {
+  if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  if (process.env.NODE_ENV !== 'production' && requestOrigin) {
+    if (requestOrigin.startsWith('http://localhost:') || requestOrigin.startsWith('http://127.0.0.1:')) {
+      return requestOrigin;
+    }
+  }
+  return 'https://the-kidpreneur-journey.com';
+}
+
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
-  const ALLOWED_ORIGIN = 'https://the-kidpreneur-journey.com';
+  const requestOrigin = request.headers.get('origin');
+  const corsOrigin = getCorsOrigin(requestOrigin);
   const hostname = request.headers.get('host') || '';
 
   // 1. Subdomain Routing
@@ -32,9 +55,10 @@ export async function middleware(request: NextRequest) {
     return new NextResponse(null, {
       status: 200,
       headers: {
-        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Credentials': 'true',
       },
     });
   }
@@ -81,9 +105,10 @@ export async function middleware(request: NextRequest) {
   const response = rewritten ? NextResponse.rewrite(url) : NextResponse.next();
   
   if (activePathname.startsWith('/api')) {
-    response.headers.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
   }
 
   return response;

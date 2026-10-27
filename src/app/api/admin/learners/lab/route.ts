@@ -15,9 +15,8 @@ export async function GET(request: Request) {
     }
 
     const payload = await verifyToken(token);
-    // Real app would verify admin role here
-    if (!payload || !payload.userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!payload || !payload.userId || payload.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized: Admin privileges required' }, { status: 401 });
     }
 
     const registrations = await db.select().from(labRegistrations).orderBy(desc(labRegistrations.createdAt));
