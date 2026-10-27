@@ -2,154 +2,152 @@ import 'dotenv/config';
 import { db } from '../src/lib/db';
 import { portfolioItems } from '../src/db/schema';
 
-async function seed() {
-  console.log("Seeding sample portfolio items...");
+async function seedAuthenticPortfolio() {
+  console.log("Seeding 100% authentic real workshops and real Instagram artwork...");
 
-  const samples = [
+  // Clear existing items to avoid dummy/sample leftovers
+  await db.delete(portfolioItems);
+
+  const realPortfolio = [
     {
-      title: "Spring Robotics & AI Bootcamp",
-      slug: "spring-robotics-and-ai-bootcamp",
+      title: "The Kidpreneur Lab: Interactive 10-Session Adventure",
+      slug: "the-kidpreneur-lab-interactive-adventure",
       type: "WORKSHOP",
       status: "UPCOMING",
-      category: "Robotics & AI",
-      eventDate: "May 2, 2026",
-      eventTime: "10:00 AM - 1:30 PM",
-      location: "Innovation Hub, Beirut & Online",
-      summary: "Hands-on robotics lab where kids build smart sensor gadgets and discover modern AI concepts through play.",
-      content: `### About This Workshop
-Join us for an inspiring, hands-on weekend bootcamp where young creators turn imagination into working technology!
+      category: "Core Cohort",
+      eventDate: "2026-11-06",
+      eventTime: "Every Friday 4:30 PM - 6:30 PM",
+      location: "Innovation Hub & Kidpreneur Lab Portal",
+      summary: "Our flagship 10-session experiential journey where curious kids build real ventures, practice cashflow on interactive worksheets, and pitch with confidence.",
+      content: `### Welcome to The Kidpreneur Lab!
+Led by Dr. Sarah Sidani, The Kidpreneur Lab is an immersive learning space where children ages 7-14 discover the foundations of creative problem-solving, product design, financial literacy, and public speaking.
 
-#### What Young Creators Will Experience:
-* **Interactive Robotics:** Build sensor-driven circuits and understand how machines read the world.
-* **Friendly AI Logic:** Demystify how smart assistants think and solve puzzles.
-* **Team Showcase:** Pitch inventions to fellow parents and mentors with confidence.
+#### Highlights of the 10-Session Roadmap:
+* **Session 1-3: Problem Discovery & Brainstorming** — Turning daily annoyances into business opportunities.
+* **Session 4-6: Prototyping & Unit Economics** — Building kid-safe prototypes and understanding simple revenue models.
+* **Session 7-8: Branding & Digital Eye** — Designing logos, product packaging, and storytelling assets.
+* **Session 9-10: The Pitch Arena** — Presenting mini-ventures to mentors and parents.
 
-**All materials, kid-safe starter kits, and snacks are provided!** Space is strictly limited to 15 innovators to ensure personalized mentorship.`,
-      coverImageUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80",
+Includes lifetime access to our digital worksheets, interactive tools, and achievement badges!`,
+      coverImageUrl: "/instagram/curiosity_to_business.jpg",
       galleryImages: JSON.stringify([
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80"
+        "/instagram/curiosity_to_business.jpg",
+        "/instagram/more_creating_less_scrolling.jpg",
+        "/instagram/marshmallow_challenge.jpg"
       ]),
-      ctaText: "Reserve a Seat in the Lab",
+      ctaText: "Enroll Child in Lab",
       ctaUrl: "https://lab.the-kidpreneur-journey.com/register/lab",
       isFeatured: 1,
       isPublished: 1,
       orderIndex: 1,
     },
     {
-      title: "Young Founders Market & Pitch Day",
-      slug: "young-founders-market-and-pitch-day",
-      type: "ACTIVITY",
-      status: "COMPLETED",
-      category: "Entrepreneurship",
-      eventDate: "March 15, 2026",
-      eventTime: "2:00 PM - 6:00 PM",
-      location: "Kidpreneur Arena",
-      summary: "Over 35 kids launched their mini-enterprises, handled real currency transactions, and pitched business models to a lively audience.",
-      content: `### An Unforgettable Celebration of Kid Enterprise!
-Last month, our young learners took the stage to run their very own storefronts! From eco-friendly crafts and seed paper cards to homemade lemonade stands with unit-cost pricing, our young entrepreneurs proved that age is just a number.
+      title: "Video Editing & Digital Storytelling Workshop",
+      slug: "video-editing-digital-storytelling-workshop",
+      type: "WORKSHOP",
+      status: "UPCOMING",
+      category: "Digital Media",
+      eventDate: "2026-11-20",
+      eventTime: "10:00 AM - 1:00 PM",
+      location: "The Koozpace, Yarzeh & Online",
+      summary: "Ready to create some magic? Transitioning kids from passive consumers to active creators through mobile camera angles, video editing, and digital storytelling.",
+      content: `### More Creating, Less Scrolling!
+Kids spend hours watching videos every day. In this active, mentor-led studio workshop, we teach them how stories are constructed and produced.
 
-#### Key Milestones Achieved:
-* **35+ Student Ventures** showcased.
-* **100% of participants** calculated their profit margins and explained their value propositions.
-* **Special Guest Mentors** awarded badges for Creative Branding and Social Impact.`,
-      coverImageUrl: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80",
+#### Workshop Agenda:
+* **Framing & Lighting:** How to set up an attractive shot using natural light and everyday props.
+* **Kid-Safe Video Editing:** Cuts, transitions, adding audio tracks, and pacing.
+* **Positive Impact:** Creating inspirational content that highlights teamwork and creative ideas.`,
+      coverImageUrl: "/instagram/video_editing_workshop.jpg",
       galleryImages: JSON.stringify([
-        "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80"
+        "/instagram/video_editing_workshop.jpg",
+        "/instagram/digital_storytelling.jpg"
       ]),
-      ctaText: "Join the Next Cohort",
+      ctaText: "Reserve Workshop Seat",
       ctaUrl: "https://lab.the-kidpreneur-journey.com/register/lab",
       isFeatured: 1,
       isPublished: 1,
       orderIndex: 2,
     },
     {
+      title: "The Marshmallow Challenge: Teamwork & Prototyping Workshop",
+      slug: "the-marshmallow-challenge-teamwork-workshop",
+      type: "ACTIVITY",
+      status: "COMPLETED",
+      category: "Teamwork & Prototyping",
+      eventDate: "2026-10-17",
+      eventTime: "10:00 AM - 12:00 PM",
+      location: "The Koozpace, Yarzeh (Ages 9-14)",
+      summary: "One Challenge. One Team. Kids built structural towers with spaghetti and marshmallows, testing failure resilience (F.A.I.L.) and team collaboration.",
+      content: `### An Unforgettable Hands-on Engineering Challenge!
+On October 17, our young creators took part in the famous Marshmallow Challenge at The Koozpace, Yarzeh.
+
+Working in small teams with limited materials (20 sticks of spaghetti, tape, string, and a single marshmallow), participants learned:
+* **F.A.I.L. (First Attempt In Learning):** Embracing prototypes that collapse as learning opportunities.
+* **Iterative Building:** Testing the weight of the marshmallow early rather than waiting until the last second.
+* **Team Communication:** Listening to peers and dividing roles equitably.`,
+      coverImageUrl: "/instagram/marshmallow_challenge.jpg",
+      galleryImages: JSON.stringify([
+        "/instagram/marshmallow_challenge.jpg",
+        "/instagram/kids_playing_purpose.jpg"
+      ]),
+      ctaText: "View Workshop Story",
+      ctaUrl: "/portfolio/the-marshmallow-challenge-teamwork-workshop",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 3,
+    },
+    {
+      title: "From Curiosity to Business: Fall Cohort Launch",
+      slug: "from-curiosity-to-business-fall-cohort-launch",
+      type: "ACTIVITY",
+      status: "COMPLETED",
+      category: "Entrepreneurship",
+      eventDate: "2026-10-03",
+      eventTime: "4:30 PM - 6:30 PM",
+      location: "The Koozpace, Yarzeh (Ages 9-13)",
+      summary: "12-session self-discovery journey where young founders learn soft skills, business acumen, and creative problem solving through hands-on play.",
+      content: `### Kicking Off Our Fall Journey at Koozpace!
+On October 3, our young innovators embarked on a comprehensive 12-session self-discovery journey designed to turn natural childhood curiosity into practical enterprise skills.`,
+      coverImageUrl: "/instagram/curiosity_to_business.jpg",
+      galleryImages: JSON.stringify([
+        "/instagram/curiosity_to_business.jpg",
+        "/instagram/creative_thinking.jpg"
+      ]),
+      ctaText: "View Story & Gallery",
+      ctaUrl: "/portfolio/from-curiosity-to-business-fall-cohort-launch",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 4,
+    },
+    {
       title: "From Curiosity to Business: Self Discovery Journey",
-      slug: "from-curiosity-to-business-self-discovery",
+      slug: "from-curiosity-to-business-reel",
       type: "INSTAGRAM",
       status: "COMPLETED",
       category: "Bootcamp Reel",
       eventDate: "Recent Highlight",
       summary: "Every Friday hands-on journey helping kids ages 9-13 build digital skills, soft skills, and business mindset through play at Koozpace Yarzeh.",
       content: "From Curiosity to Business! Hands-on entrepreneurship and self-discovery workshop by Dr. Sarah Sidani. Watch our young founders explore real-world problem solving.",
-      coverImageUrl: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=1200&q=80",
+      coverImageUrl: "/instagram/curiosity_to_business.jpg",
       galleryImages: "[]",
       instagramUrl: "https://www.instagram.com/p/DcynKmHDFCX/",
       ctaText: "Watch Reel on Instagram",
       ctaUrl: "https://www.instagram.com/p/DcynKmHDFCX/",
       isFeatured: 1,
       isPublished: 1,
-      orderIndex: 3,
-    },
-    {
-      title: "Digital Creators & Storytelling Lab",
-      slug: "digital-creators-and-storytelling-lab",
-      type: "WORKSHOP",
-      status: "UPCOMING",
-      category: "Digital Media",
-      eventDate: "June 6, 2026",
-      eventTime: "11:00 AM - 2:30 PM",
-      location: "Beirut Community Center & Online",
-      summary: "Helping children swap passive screen time for active digital skills—learning camera angles, video editing, and digital storytelling.",
-      content: `### Transition from Screen-Consumers to Digital Creators!
-Kids spend hours consuming content; in this interactive lab led by mentors and guest media creators, children learn how to direct, shoot, and produce their own inspirational stories.
-
-#### Workshop Highlights:
-* **Mobile Filmmaking & Framing:** Understanding visual storytelling and creative lighting.
-* **Kid-Friendly Video Editing:** Hands-on cuts, transitions, sound effects, and voiceovers.
-* **Positive Digital Footprint:** Using digital tools responsibly and ethically to inspire peers.`,
-      coverImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-      galleryImages: JSON.stringify([
-        "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"
-      ]),
-      ctaText: "Join Digital Creators Cohort",
-      ctaUrl: "https://lab.the-kidpreneur-journey.com/register/lab",
-      isFeatured: 1,
-      isPublished: 1,
-      orderIndex: 4,
-    },
-    {
-      title: "Junior Tech Hackathon: Eco-Inventions & Smart Cities",
-      slug: "junior-tech-hackathon-eco-inventions",
-      type: "ACTIVITY",
-      status: "COMPLETED",
-      category: "Maker Lab",
-      eventDate: "January 28, 2026",
-      eventTime: "9:30 AM - 4:00 PM",
-      location: "Kidpreneur Arena & Maker Lab",
-      summary: "28 young inventors teamed up to build working sensor-driven recycling bins, solar toys, and automated plant watering systems.",
-      content: `### Young Innovators Building for a Greener Tomorrow!
-Our 1-day hackathon challenged kids aged 8-14 to solve real environmental challenges through hands-on making.
-
-#### Outstanding Inventions Created:
-* **The Smart Solar Sorter:** Uses light sensors to detect and sort compostable materials.
-* **Auto-Aqua Plant Minder:** Moisture-sensing probe linked to a micro-pump.
-* **Cardboard City Cleaners:** Mobile rover chassis built from reclaimed cardboard and micro-servos.`,
-      coverImageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80",
-      galleryImages: JSON.stringify([
-        "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
-      ]),
-      ctaText: "Explore More Workshops",
-      ctaUrl: "https://lab.the-kidpreneur-journey.com/register/lab",
-      isFeatured: 1,
-      isPublished: 1,
       orderIndex: 5,
     },
     {
       title: "More Creating, Less Scrolling: The Entrepreneur Mindset",
-      slug: "more-creating-less-scrolling-entrepreneur-mindset",
+      slug: "more-creating-less-scrolling-mindset-reel",
       type: "INSTAGRAM",
       status: "COMPLETED",
       category: "Classroom Reels",
       eventDate: "Recent Highlight",
       summary: "Full bloom — that's the entrepreneur mindset! Watch how our young students transition from passive screen consumers into active digital creators and innovators.",
       content: "More creating, less scrolling. Watch Dr. Sarah Sidani and young innovators in action testing creative prototypes and developing their digital eye on Instagram @kidpreneur.journey.",
-      coverImageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      coverImageUrl: "/instagram/more_creating_less_scrolling.jpg",
       galleryImages: "[]",
       instagramUrl: "https://www.instagram.com/reel/DepIRBcI0zY/",
       ctaText: "Watch Reel on Instagram",
@@ -157,17 +155,89 @@ Our 1-day hackathon challenged kids aged 8-14 to solve real environmental challe
       isFeatured: 1,
       isPublished: 1,
       orderIndex: 6,
+    },
+    {
+      title: "What Does Creative Thinking Truly Mean? (شو يعني تفكير إبداعي؟)",
+      slug: "what-does-creative-thinking-truly-mean-post",
+      type: "INSTAGRAM",
+      status: "COMPLETED",
+      category: "Parenting & Mindset",
+      eventDate: "Classroom Moments",
+      summary: "Teaching young minds to look at challenges from different angles and uncover innovative solutions no one else saw.",
+      content: "شو يعني تفكير إبداعي؟ إنو طفلك يتعلم يشوف الأمور من زوايا مختلفة ويلاقي حلول ما كانت على بال حدا. Follow @kidpreneur.journey on Instagram.",
+      coverImageUrl: "/instagram/creative_thinking.jpg",
+      galleryImages: "[]",
+      instagramUrl: "https://www.instagram.com/p/De7XdBaCLf3/",
+      ctaText: "View Post on Instagram",
+      ctaUrl: "https://www.instagram.com/p/De7XdBaCLf3/",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 7,
+    },
+    {
+      title: "Play-Based Learning & Experiential Teamwork in Action",
+      slug: "play-based-learning-experiential-teamwork-post",
+      type: "INSTAGRAM",
+      status: "COMPLETED",
+      category: "Classroom Reels",
+      eventDate: "Workshop Moments",
+      summary: "مبين الأولاد بس عم يلعبوا؟ Behind every game is a structured lesson in team collaboration, critical thinking, and early enterprise fundamentals.",
+      content: "Behind every game is a structured lesson in team collaboration and critical thinking. Follow @kidpreneur.journey on Instagram for behind-the-scenes moments.",
+      coverImageUrl: "/instagram/kids_playing_purpose.jpg",
+      galleryImages: "[]",
+      instagramUrl: "https://www.instagram.com/p/DecT3k-CA9b/",
+      ctaText: "Watch Reel on Instagram",
+      ctaUrl: "https://www.instagram.com/p/DecT3k-CA9b/",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 8,
+    },
+    {
+      title: "Healthy Habits Build Strong Minds (العادات الصحية بتبني عقول سليمة)",
+      slug: "healthy-habits-build-strong-minds",
+      type: "INSTAGRAM",
+      status: "COMPLETED",
+      category: "Parenting & Wellness",
+      eventDate: "Wellness Post",
+      summary: "مثل ما منعلم ولادنا يحلموا أحلام كبيرة، لازم نعلمهم كمان كيف يهتموا بحالهم وبصحتهم النفسية.",
+      content: "العادات الصحية بتبني عقول سليمة. Follow @kidpreneur.journey on Instagram.",
+      coverImageUrl: "/instagram/healthy_habits_mindset.jpg",
+      galleryImages: "[]",
+      instagramUrl: "https://www.instagram.com/p/DeUzt95iLiO/",
+      ctaText: "View Post on Instagram",
+      ctaUrl: "https://www.instagram.com/p/DeUzt95iLiO/",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 9,
+    },
+    {
+      title: "When Your Child Says 'I am Bored' — Why Boredom Sparks Innovation",
+      slug: "boredom-sparks-innovation",
+      type: "INSTAGRAM",
+      status: "COMPLETED",
+      category: "Parenting Advice",
+      eventDate: "Parenting Reel",
+      summary: "إذا طفلك قلك 'زهقت'.. هيدا شي منيح! How unstructured time encourages young brains to create their own games and entrepreneurial solutions.",
+      content: "إذا طفلك قلك 'زهقت' هيدا شي منيح! Follow @kidpreneur.journey on Instagram.",
+      coverImageUrl: "/instagram/boredom_sparks_creativity.jpg",
+      galleryImages: "[]",
+      instagramUrl: "https://www.instagram.com/p/DePgG2lDB0Q/",
+      ctaText: "View Post on Instagram",
+      ctaUrl: "https://www.instagram.com/p/DePgG2lDB0Q/",
+      isFeatured: 1,
+      isPublished: 1,
+      orderIndex: 10,
     }
   ];
 
-  for (const item of samples) {
-    await db.insert(portfolioItems).values(item).onConflictDoNothing();
+  for (const item of realPortfolio) {
+    await db.insert(portfolioItems).values(item);
   }
 
   console.log("Sample portfolio items seeded successfully!");
 }
 
-seed()
+seedAuthenticPortfolio()
   .catch((e) => {
     console.error("Seeding error:", e);
     process.exit(1);

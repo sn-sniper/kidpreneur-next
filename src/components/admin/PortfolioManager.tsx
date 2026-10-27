@@ -489,19 +489,36 @@ export const PortfolioManager: React.FC = () => {
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                  <span
-                    className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm ${
-                      item.type === 'INSTAGRAM'
-                        ? 'bg-pink-600/90 text-white'
-                        : item.status === 'UPCOMING'
-                        ? 'bg-emerald-600/90 text-white'
-                        : item.status === 'COMPLETED'
-                        ? 'bg-blue-600/90 text-white'
-                        : 'bg-amber-600/90 text-white'
-                    }`}
-                  >
-                    {item.type === 'INSTAGRAM' ? 'Instagram' : item.status}
-                  </span>
+                  {(() => {
+                    const isPast = Boolean(
+                      item.eventDate &&
+                      !isNaN(new Date(item.eventDate).getTime()) &&
+                      new Date(item.eventDate) < new Date(new Date().setHours(0, 0, 0, 0))
+                    );
+                    const isAutoArchived = item.type === 'WORKSHOP' && item.status === 'UPCOMING' && isPast;
+
+                    return (
+                      <span
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md shadow-sm ${
+                          item.type === 'INSTAGRAM'
+                            ? 'bg-pink-600/90 text-white'
+                            : isAutoArchived
+                            ? 'bg-indigo-600/90 text-white'
+                            : item.status === 'UPCOMING'
+                            ? 'bg-emerald-600/90 text-white'
+                            : item.status === 'COMPLETED'
+                            ? 'bg-blue-600/90 text-white'
+                            : 'bg-amber-600/90 text-white'
+                        }`}
+                      >
+                        {item.type === 'INSTAGRAM'
+                          ? 'Instagram'
+                          : isAutoArchived
+                          ? 'Past (Auto-Expired)'
+                          : item.status}
+                      </span>
+                    );
+                  })()}
 
                   {item.category && (
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-900/70 text-white backdrop-blur-md">
@@ -755,14 +772,19 @@ export const PortfolioManager: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Event Date</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">Event Date</label>
+                    <span className="text-[10px] text-teal-600 font-semibold bg-teal-50 px-2 py-0.5 rounded-full">Auto-Archives to Past</span>
+                  </div>
                   <input
-                    type="text"
+                    type="date"
                     value={formData.eventDate || ''}
                     onChange={e => setFormData({ ...formData, eventDate: e.target.value })}
-                    placeholder="e.g. May 2, 2026"
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    When this date passes, the platform automatically moves it to Past Activities.
+                  </p>
                 </div>
               </div>
 

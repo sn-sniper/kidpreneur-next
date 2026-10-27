@@ -34,10 +34,25 @@ export async function GET(request: NextRequest) {
       .from(portfolioItems)
       .orderBy(asc(portfolioItems.orderIndex), desc(portfolioItems.createdAt));
 
-    const formatted = items.map((item) => ({
-      ...item,
-      galleryImages: safeParseJson(item.galleryImages),
-    }));
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const formatted = items.map((item) => {
+      let effectiveStatus = item.status;
+      if (item.type === 'WORKSHOP' && item.status === 'UPCOMING' && item.eventDate) {
+        const parsed = new Date(item.eventDate);
+        if (!isNaN(parsed.getTime()) && parsed < startOfToday) {
+          effectiveStatus = 'COMPLETED';
+        }
+      }
+
+      return {
+        ...item,
+        effectiveStatus,
+        isExpired: effectiveStatus !== item.status,
+        galleryImages: safeParseJson(item.galleryImages),
+      };
+    });
 
     return NextResponse.json({ items: formatted }, { status: 200 });
   } catch (error) {

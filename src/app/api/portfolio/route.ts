@@ -38,13 +38,34 @@ export async function GET(request: NextRequest) {
       .where(and(...conditions))
       .orderBy(asc(portfolioItems.orderIndex), desc(portfolioItems.createdAt));
 
-    // Parse galleryImages JSON array
-    const formattedItems = items.map((item) => ({
-      ...item,
-      galleryImages: safeParseJson(item.galleryImages),
-    }));
+    // Smart Date Engine:
+    // Automatically transition any WORKSHOP whose eventDate has passed into COMPLETED (Past Highlights).
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    return NextResponse.json({ items: formattedItems }, {
+    const formattedItems = items.map((item) => {
+      let effectiveStatus = item.status;
+      if (item.type === 'WORKSHOP' && item.status === 'UPCOMING' && item.eventDate) {
+        const parsed = new Date(item.eventDate);
+        if (!isNaN(parsed.getTime()) && parsed < startOfToday) {
+          effectiveStatus = 'COMPLETED';
+        }
+      }
+
+      return {
+        ...item,
+        status: effectiveStatus,
+        isExpired: effectiveStatus !== item.status,
+        galleryImages: safeParseJson(item.galleryImages),
+      };
+    });
+
+    // If caller filtered by status, filter against the dynamic effectiveStatus
+    const result = status
+      ? formattedItems.filter((i) => i.status === status.toUpperCase())
+      : formattedItems;
+
+    return NextResponse.json({ items: result }, {
       status: 200,
       headers: corsHeaders,
     });
