@@ -363,20 +363,20 @@ export const PortfolioManager: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Portfolio & Showcase CMS</h1>
-            <p className="text-slate-500 text-sm">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Portfolio & Showcase CMS</h1>
+            <p className="text-slate-500 text-xs sm:text-sm">
               Create, edit, and publish upcoming workshops, past activity stories, and Instagram posts.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <button
             onClick={() => {
               setEngineUrl('');
@@ -384,7 +384,7 @@ export const PortfolioManager: React.FC = () => {
               setEngineError(null);
               setIsEngineOpen(true);
             }}
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-sm"
+            className="flex-1 sm:flex-initial justify-center flex items-center gap-2 bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 text-white font-medium px-4 sm:px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-xs sm:text-sm"
           >
             <InstagramIcon className="w-4 h-4" />
             <span>Instagram Engine</span>
@@ -392,7 +392,7 @@ export const PortfolioManager: React.FC = () => {
 
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-sm"
+            className="flex-1 sm:flex-initial justify-center flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 sm:px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-all text-xs sm:text-sm"
           >
             <Plus className="w-5 h-5" />
             <span>Add Item</span>
@@ -401,7 +401,7 @@ export const PortfolioManager: React.FC = () => {
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-3.5 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -413,9 +413,9 @@ export const PortfolioManager: React.FC = () => {
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 scrollbar-none">
           {/* Type Filter */}
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-medium">
+          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-medium shrink-0">
             {[
               { id: 'ALL', label: 'All Types' },
               { id: 'WORKSHOP', label: 'Upcoming Workshops' },
@@ -425,7 +425,7 @@ export const PortfolioManager: React.FC = () => {
               <button
                 key={t.id}
                 onClick={() => setSelectedType(t.id)}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                   selectedType === t.id
                     ? 'bg-white text-slate-800 shadow-sm font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
@@ -437,12 +437,12 @@ export const PortfolioManager: React.FC = () => {
           </div>
 
           {/* Status Filter */}
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-medium">
+          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-medium shrink-0">
             {['ALL', 'UPCOMING', 'COMPLETED', 'DRAFT'].map(s => (
               <button
                 key={s}
                 onClick={() => setSelectedStatus(s)}
-                className={`px-3 py-1.5 rounded-lg transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                   selectedStatus === s
                     ? 'bg-white text-slate-800 shadow-sm font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
@@ -644,7 +644,7 @@ export const PortfolioManager: React.FC = () => {
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Item Type
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                   {[
                     { type: 'WORKSHOP', label: 'Upcoming Workshop', icon: Calendar },
                     { type: 'ACTIVITY', label: 'Past Activity Story', icon: CheckCircle2 },

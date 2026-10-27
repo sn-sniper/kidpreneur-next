@@ -39,7 +39,86 @@ export const LearnersTable = () => {
 
   return (
     <div className="w-full">
-      <div className="relative w-full max-h-[calc(100vh-220px)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
+      {/* Mobile Card Stack (< md) */}
+      <div className="md:hidden flex flex-col gap-3">
+        {registrations.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 text-slate-500">
+            No registrations found.
+          </div>
+        )}
+        {registrations.map((reg) => (
+          <div 
+            key={reg.id} 
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3"
+          >
+            <div className="flex items-start justify-between gap-2 border-b border-slate-50 pb-2.5">
+              <div>
+                <h4 className="font-bold text-slate-900 text-base">{reg.childFullName}</h4>
+                <p className="text-xs text-slate-500">Parent: <span className="font-medium text-slate-700">{reg.parentFullName}</span></p>
+              </div>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize shrink-0 ${
+                reg.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {reg.status.toLowerCase()}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50/60 p-2.5 rounded-xl">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Child Age</span>
+                <span className="font-semibold text-slate-800">{reg.childAge} yrs old</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Phone</span>
+                <a href={`tel:${reg.parentPhone}`} className="font-medium text-teal-600 hover:underline truncate block">
+                  {reg.parentPhone || 'N/A'}
+                </a>
+              </div>
+              <div className="col-span-2">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Email</span>
+                <a href={`mailto:${reg.parentEmail}`} className="font-medium text-teal-600 hover:underline truncate block">
+                  {reg.parentEmail}
+                </a>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              {reg.status === 'PENDING' ? (
+                <Button 
+                  className="w-full py-2.5 font-bold"
+                  size="sm" 
+                  onClick={() => handleConfirm(reg.id)}
+                  disabled={confirmingId === reg.id}
+                >
+                  {confirmingId === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Payment'}
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full py-2.5 font-semibold"
+                  size="sm" 
+                  variant="secondary"
+                  onClick={() => {
+                    if (reg.generatedEmail && reg.generatedPassword) {
+                      setCredsDialog({ 
+                        isOpen: true, 
+                        creds: { email: reg.generatedEmail, password: reg.generatedPassword } 
+                      });
+                    } else {
+                      alert("Credentials missing or not generated.");
+                    }
+                  }}
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Show User Creds
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table (md and up) */}
+      <div className="hidden md:block relative w-full max-h-[calc(100vh-220px)] overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none">
         <table className="w-full caption-bottom text-sm">
           <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             <TableRow className="border-slate-100 border-b">
