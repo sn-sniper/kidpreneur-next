@@ -15,13 +15,18 @@ export default function LabRegistrationPage() {
     return null;
   }
 
+  const mainSiteUrl =
+    typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? 'http://localhost:5173'
+      : 'https://the-kidpreneur-journey.com';
+
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
-          <Link href="http://localhost:5173" className="text-navy font-bold hover:underline">
+          <a href={mainSiteUrl} className="text-navy font-bold hover:underline inline-flex items-center gap-1">
             &larr; Back to Home
-          </Link>
+          </a>
         </div>
 
         {status === 'PENDING' ? (
