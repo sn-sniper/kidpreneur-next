@@ -23,21 +23,21 @@ export const LiveClassView: React.FC = () => {
             <strong className="block text-ink font-bold text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4 text-coral" /> Next Session
             </strong>
-            <p className="mt-2 text-xs text-slate-600">Check schedule with your facilitator</p>
+            <p className="mt-2 text-xs text-slate-600">Bi-weekly live group coaching</p>
           </div>
 
           <div className="rounded-2xl bg-white/90 p-5 shadow-sm border border-slate-100">
             <strong className="block text-ink font-bold text-sm flex items-center gap-2">
-              <Clock className="h-4 w-4 text-coral" /> Duration
+              <Clock className="h-4 w-4 text-coral" /> Format
             </strong>
-            <p className="mt-2 text-xs text-slate-600">Approximately 90 minutes</p>
+            <p className="mt-2 text-xs text-slate-600">Live online group coaching</p>
           </div>
 
           <div className="rounded-2xl bg-white/90 p-5 shadow-sm border border-slate-100">
             <strong className="block text-ink font-bold text-sm flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-coral" /> Prepare
             </strong>
-            <p className="mt-2 text-xs text-slate-600">Notebook, pencil, and curiosity!</p>
+            <p className="mt-2 text-xs text-slate-600">Notebook, questions, and ideas!</p>
           </div>
         </div>
 

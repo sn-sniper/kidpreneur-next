@@ -30,9 +30,8 @@ export const ProgrammeView: React.FC = () => {
           </div>
 
           <div className="mt-8 space-y-3 text-sm font-bold text-ink bg-white/80 p-5 rounded-2xl border border-amber-200/50">
-            <p className="flex items-center gap-2">🕘 {sessions.length} live online sessions</p>
-            <p className="flex items-center gap-2">⏱ About 90 minutes each</p>
-            <p className="flex items-center gap-2">🎒 Learn, make, share, repeat</p>
+            <p className="flex items-center gap-2">💻 Self-paced course</p>
+            <p className="flex items-center gap-2">👥 Bi-weekly group coaching online session</p>
           </div>
         </aside>
 
@@ -42,23 +41,23 @@ export const ProgrammeView: React.FC = () => {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <strong className="text-ink font-bold text-base flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-mint" /> 1. Join Live
+                  <CheckCircle2 className="h-5 w-5 text-mint" /> 1. Self-Paced Learning
                 </strong>
-                <p className="mt-2 text-sm text-slate-600">Bring your ideas and join five minutes early.</p>
+                <p className="mt-2 text-sm text-slate-600">Explore interactive modules and activities anytime at your own speed.</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <strong className="text-ink font-bold text-base flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-mint" /> 2. Try Challenges
+                  <CheckCircle2 className="h-5 w-5 text-mint" /> 2. Bi-Weekly Group Coaching
                 </strong>
-                <p className="mt-2 text-sm text-slate-600">Complete activities during or after each session.</p>
+                <p className="mt-2 text-sm text-slate-600">Join our live group coaching sessions online to share progress and ask questions.</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <strong className="text-ink font-bold text-base flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-mint" /> 3. Save Your Work
+                  <CheckCircle2 className="h-5 w-5 text-mint" /> 3. Try Challenges
                 </strong>
-                <p className="mt-2 text-sm text-slate-600">Keep your worksheets, notes, and sketches organised.</p>
+                <p className="mt-2 text-sm text-slate-600">Complete hands-on activities, save your sketches, and build prototypes.</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
