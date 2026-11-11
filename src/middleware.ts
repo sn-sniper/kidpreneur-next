@@ -48,6 +48,13 @@ export async function middleware(request: NextRequest) {
 
   const activePathname = rewritten ? url.pathname : pathname;
 
+  // Temporary: Take down the Lab frontend online (keep /api backend and /admin CMS 100% active)
+  if (!activePathname.startsWith('/api') && !activePathname.startsWith('/admin')) {
+    if (process.env.NODE_ENV === 'production' || !hostname.includes('localhost')) {
+      return NextResponse.redirect(new URL('https://the-kidpreneur-journey.com'), 307);
+    }
+  }
+
   // 2. Auth & CORS Logic
 
   // Handle preflight requests for API routes
