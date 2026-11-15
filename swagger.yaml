@@ -906,3 +906,4 @@ components:
         childAge:
           type: integer
           example: 10
+

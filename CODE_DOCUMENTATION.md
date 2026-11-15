@@ -309,3 +309,4 @@ npx drizzle-kit studio     # Launch Drizzle visual DB browser
 cd next-app
 npm run deploy      # Executes 'opennextjs-cloudflare build && opennextjs-cloudflare deploy'
 ```
+
