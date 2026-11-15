@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, BookOpen, Layers, LogOut, User as UserIcon, MessageSquare, Sparkles, Image as ImageIcon, Link as LinkIcon, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { LayoutDashboard, BookOpen, Layers, LogOut, User as UserIcon, MessageSquare, Sparkles, Image as ImageIcon, Link as LinkIcon, X, RefreshCw } from 'lucide-react';
 import React from 'react';
 import {
   Accordion,
@@ -25,6 +26,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onClose,
   className = '' 
 }) => {
+  const router = useRouter();
   const handleLinkClick = () => {
     if (onNavigate) {
       onNavigate();
@@ -43,7 +45,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           />
           <div>
             <h2 className="text-base font-bold text-white tracking-tight leading-tight">Admin Portal</h2>
-            <p className="text-[11px] text-teal-400 font-medium">Kidpreneur Journey</p>
+            <p className="text-[11px] text-teal-400 font-medium">The Kidpreneur Journey</p>
           </div>
         </Link>
 
@@ -148,7 +150,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <button 
           onClick={async () => {
             await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.href = '/admin/login';
+            await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
+            router.push('/admin/login');
+            router.refresh();
           }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-colors"
         >
