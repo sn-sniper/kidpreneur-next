@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "swagger": "npx @redocly/cli preview-docs swagger.yaml",
+    "swagger:ui": "npx swagger-ui-watcher swagger.yaml"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
