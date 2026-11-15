@@ -1,0 +1,908 @@
+openapi: 3.0.3
+info:
+  title: The Kidpreneur Journey API
+  version: 1.0.0
+  description: |
+    Comprehensive REST API specification for **The Kidpreneur Journey** backend platform.
+    Powers the Vite public showcase, the Next.js Student Learning Lab, and the Admin CMS dashboard.
+  contact:
+    name: The Kidpreneur Journey Support
+    url: https://the-kidpreneur-journey.com
+    email: hello@the-kidpreneur-journey.com
+servers:
+  - url: https://api.the-kidpreneur-journey.com
+    description: Production API Subdomain (Cloudflare Worker)
+  - url: https://the-kidpreneur-journey.com
+    description: Production Main Domain
+  - url: http://localhost:3000
+    description: Local Development Environment
+
+tags:
+  - name: Authentication
+    description: Student and parent session management and registration
+  - name: Admin Authentication
+    description: Dedicated admin dashboard access control
+  - name: Public Portfolio
+    description: Endpoints powering public workshop and showcase feeds
+  - name: Admin Portfolio
+    description: Management endpoints for publishing and editing workshops
+  - name: Media Management
+    description: Cloudflare R2 file uploads and media asset proxy
+  - name: Learner Registrations
+    description: Lab intake registrations and admin learner confirmation
+  - name: Student Progress & Activities
+    description: Session progression, code unlock, and activity state autosave
+  - name: Contact Messages
+    description: Public inquiry submissions
+
+paths:
+  # ==========================================
+  # 1. AUTHENTICATION
+  # ==========================================
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Student / Parent Login
+      description: Validates email and password credentials, sets a 7-day HTTP-only `auth_token` cookie, and returns the sanitized user profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: learner@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SuperSecretPass123
+      responses:
+        '200':
+          description: Successfully authenticated.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: auth_token=jwt_token_here; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Missing required fields or malformed payload.
+        '401':
+          description: Invalid email or password.
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout User
+      description: Clears the `auth_token` session cookie.
+      responses:
+        '200':
+          description: Successfully logged out.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get Current Session Profile
+      description: Reads the `auth_token` cookie and returns user profile data.
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active session profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthenticated or expired token.
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register Student or Parent Account
+      description: Creates a new user record with hashed password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - fullName
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: parent@example.com
+                password:
+                  type: string
+                  format: password
+                  example: StrongPassword!456
+                fullName:
+                  type: string
+                  example: Maya Haddad
+                role:
+                  type: string
+                  enum: [STUDENT, PARENT]
+                  default: STUDENT
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '409':
+          description: Email already registered.
+
+  # ==========================================
+  # 2. ADMIN AUTHENTICATION
+  # ==========================================
+  /api/admin/auth/login:
+    post:
+      tags:
+        - Admin Authentication
+      summary: Admin Portal Login
+      description: Strictly verifies credentials and enforces `role === 'ADMIN'`. Issues a 1-day `admin_token` cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@the-kidpreneur-journey.com
+                password:
+                  type: string
+                  format: password
+                  example: AdminSecretKey!
+      responses:
+        '200':
+          description: Admin login successful.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: admin_token=jwt_admin_token; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid credentials or non-admin account.
+
+  /api/admin/auth/logout:
+    post:
+      tags:
+        - Admin Authentication
+      summary: Admin Logout
+      description: Clears the `admin_token` cookie.
+      responses:
+        '200':
+          description: Successfully logged out from admin session.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  # ==========================================
+  # 3. PUBLIC PORTFOLIO
+  # ==========================================
+  /api/portfolio:
+    get:
+      tags:
+        - Public Portfolio
+      summary: List Published Portfolio Items
+      description: Returns published workshops, activities, and Instagram moments. Features automated date checking to transition past upcoming workshops to completed status.
+      parameters:
+        - name: type
+          in: query
+          description: Filter by content type
+          schema:
+            type: string
+            enum: [WORKSHOP, ACTIVITY, INSTAGRAM]
+        - name: status
+          in: query
+          description: Filter by workshop status
+          schema:
+            type: string
+            enum: [UPCOMING, COMPLETED]
+        - name: featured
+          in: query
+          description: Set to 1 to retrieve only featured spotlight items
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        '200':
+          description: Array of portfolio items.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PortfolioItem'
+
+  /api/portfolio/{slug}:
+    get:
+      tags:
+        - Public Portfolio
+      summary: Get Single Workshop by Slug
+      description: Fetches full workshop metadata, description, and gallery images.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Unique URL identifier of the portfolio item
+          schema:
+            type: string
+            example: the-kidpreneur-lab-interactive-adventure
+      responses:
+        '200':
+          description: Portfolio item details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  item:
+                    $ref: '#/components/schemas/PortfolioItem'
+        '404':
+          description: Item not found or unpublished.
+
+  /api/portfolio/activities:
+    get:
+      tags:
+        - Public Portfolio
+      summary: List Active Workshop Activities
+      description: Returns lightweight navigation activity links.
+      responses:
+        '200':
+          description: List of active activity items.
+
+  # ==========================================
+  # 4. ADMIN PORTFOLIO MANAGEMENT
+  # ==========================================
+  /api/admin/portfolio:
+    get:
+      tags:
+        - Admin Portfolio
+      summary: Admin List All Portfolio Items
+      description: Returns all portfolio items including unpublished drafts.
+      security:
+        - adminCookieAuth: []
+      responses:
+        '200':
+          description: Complete list of items.
+    post:
+      tags:
+        - Admin Portfolio
+      summary: Create New Portfolio Item
+      security:
+        - adminCookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePortfolioItemRequest'
+      responses:
+        '201':
+          description: Item created.
+
+  /api/admin/portfolio/{id}:
+    put:
+      tags:
+        - Admin Portfolio
+      summary: Update Portfolio Item
+      security:
+        - adminCookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePortfolioItemRequest'
+      responses:
+        '200':
+          description: Item updated.
+    delete:
+      tags:
+        - Admin Portfolio
+      summary: Delete Portfolio Item
+      security:
+        - adminCookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item deleted.
+
+  /api/admin/instagram/fetch:
+    post:
+      tags:
+        - Admin Portfolio
+      summary: Sync Recent Instagram Media
+      description: Queries Instagram Graph API for latest posts from `@kidpreneur.journey` and populates draft portfolio items.
+      security:
+        - adminCookieAuth: []
+      responses:
+        '200':
+          description: Media synced successfully.
+
+  # ==========================================
+  # 5. MEDIA MANAGEMENT (CLOUDFLARE R2)
+  # ==========================================
+  /api/admin/media:
+    get:
+      tags:
+        - Media Management
+      summary: List Uploaded Media Assets
+      security:
+        - adminCookieAuth: []
+      responses:
+        '200':
+          description: List of media files.
+    post:
+      tags:
+        - Media Management
+      summary: Upload Media Asset to Cloudflare R2
+      security:
+        - adminCookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaAsset'
+
+  /api/admin/media/{id}:
+    delete:
+      tags:
+        - Media Management
+      summary: Delete Media Asset
+      security:
+        - adminCookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset deleted from R2 and database.
+
+  /api/media/{key}:
+    get:
+      tags:
+        - Media Management
+      summary: Stream Media File Proxy
+      description: Directly streams binary content from Cloudflare R2 bucket.
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: Cloudflare R2 storage key path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Binary file stream with content-type header.
+
+  # ==========================================
+  # 6. LEARNER REGISTRATIONS
+  # ==========================================
+  /api/register/lab:
+    post:
+      tags:
+        - Learner Registrations
+      summary: Public Parent Lab Registration
+      description: Intake form for enrolling a child in The Kidpreneur Lab.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabRegistrationRequest'
+      responses:
+        '201':
+          description: Registration submitted with status PENDING.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  registrationId:
+                    type: string
+                    example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+
+  /api/admin/learners/lab:
+    get:
+      tags:
+        - Learner Registrations
+      summary: List All Lab Registrations
+      security:
+        - adminCookieAuth: []
+      responses:
+        '200':
+          description: Array of pending and confirmed registrations.
+
+  /api/admin/learners/confirm:
+    post:
+      tags:
+        - Learner Registrations
+      summary: Confirm Registration & Provision Student Account
+      description: Generates a student user login and sets registration status to CONFIRMED.
+      security:
+        - adminCookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - registrationId
+              properties:
+                registrationId:
+                  type: string
+      responses:
+        '200':
+          description: Account provisioned.
+
+  # ==========================================
+  # 7. STUDENT PROGRESS & ACTIVITIES
+  # ==========================================
+  /api/progress:
+    get:
+      tags:
+        - Student Progress & Activities
+      summary: Get Student Session Progression
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of session progression records.
+    post:
+      tags:
+        - Student Progress & Activities
+      summary: Save Session Notes & Completion
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionNumber
+                - status
+              properties:
+                sessionNumber:
+                  type: integer
+                  example: 2
+                status:
+                  type: string
+                  enum: [Locked, In Progress, Completed]
+                  example: Completed
+                notes:
+                  type: string
+                  example: Learner feedback and reflections.
+                reflection:
+                  type: string
+                  example: Key lesson learned.
+      responses:
+        '200':
+          description: Progress saved.
+
+  /api/progress/unlock:
+    post:
+      tags:
+        - Student Progress & Activities
+      summary: Unlock Session with Secret Code
+      description: Validates session code (e.g. `SPARK3`) and strictly enforces sequential completion.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionNum
+                - code
+              properties:
+                sessionNum:
+                  type: integer
+                  example: 3
+                code:
+                  type: string
+                  example: SPARK3
+      responses:
+        '200':
+          description: Session unlocked.
+        '400':
+          description: Incorrect secret code.
+        '403':
+          description: Previous session not yet completed.
+
+  /api/activities/autosave:
+    post:
+      tags:
+        - Student Progress & Activities
+      summary: Real-Time Worksheet Autosave
+      description: Persists student interactive tool inputs and updates cross-activity global variables.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - activityId
+                - activityData
+              properties:
+                activityId:
+                  type: string
+                  example: idea_scorecard_session_4
+                activityData:
+                  type: object
+                  example: { "ideaScores": { "fun": 5, "need": 4 } }
+                globalData:
+                  type: object
+                  example: { "selectedIdea": "Eco Straws" }
+      responses:
+        '200':
+          description: Autosaved.
+
+  /api/activities/resume:
+    get:
+      tags:
+        - Student Progress & Activities
+      summary: Load Autosaved Activity State
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: activityId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Draft worksheet state and global learner state.
+
+  # ==========================================
+  # 8. CONTACT MESSAGES
+  # ==========================================
+  /api/contact:
+    post:
+      tags:
+        - Contact Messages
+      summary: Submit Public Contact Inquiry
+      description: Public form submission from homepage contact section.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - message
+              properties:
+                name:
+                  type: string
+                  example: Maya Haddad
+                email:
+                  type: string
+                  format: email
+                  example: maya@example.com
+                phone:
+                  type: string
+                  example: +961 70 123456
+                interest:
+                  type: string
+                  example: Workshops
+                message:
+                  type: string
+                  example: Interested in the upcoming entrepreneurship cohort.
+      responses:
+        '200':
+          description: Message recorded.
+
+# ==========================================
+# COMPONENTS & SCHEMAS
+# ==========================================
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_token
+      description: Standard student / parent session token
+    adminCookieAuth:
+      type: apiKey
+      in: cookie
+      name: admin_token
+      description: Strict admin authentication token
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 9a2049df-1cc7-4023-8e86-417334f8c620
+        email:
+          type: string
+          format: email
+          example: student@example.com
+        fullName:
+          type: string
+          example: Alex Smith
+        role:
+          type: string
+          enum: [STUDENT, PARENT, ADMIN]
+          example: STUDENT
+        avatarUrl:
+          type: string
+          nullable: true
+
+    PortfolioItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: The Kidpreneur Lab: Interactive 10-Session Adventure
+        slug:
+          type: string
+          example: the-kidpreneur-lab-interactive-adventure
+        type:
+          type: string
+          enum: [WORKSHOP, ACTIVITY, INSTAGRAM]
+          example: WORKSHOP
+        status:
+          type: string
+          enum: [UPCOMING, COMPLETED]
+          example: UPCOMING
+        category:
+          type: string
+          example: Core Cohort
+        eventDate:
+          type: string
+          example: 2026-11-20
+        eventTime:
+          type: string
+          nullable: true
+          example: 10:00 AM - 1:00 PM
+        location:
+          type: string
+          nullable: true
+          example: Beirut, Lebanon & Online
+        summary:
+          type: string
+          example: Flagship 10-session experiential journey where curious kids build real ventures.
+        content:
+          type: string
+          example: Full markdown curriculum roadmap and lesson agenda.
+        coverImageUrl:
+          type: string
+          example: /instagram/curiosity_to_business.jpg
+        galleryImages:
+          type: string
+          example: /instagram/curiosity_to_business.jpg /instagram/marshmallow_challenge.jpg
+        instagramUrl:
+          type: string
+          nullable: true
+        ctaText:
+          type: string
+          example: Enroll Child in Lab
+        ctaUrl:
+          type: string
+          example: https://the-kidpreneur-journey.com
+        isFeatured:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        isPublished:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        orderIndex:
+          type: integer
+          example: 1
+        isExpired:
+          type: boolean
+          example: false
+
+    CreatePortfolioItemRequest:
+      type: object
+      required:
+        - title
+        - slug
+        - type
+        - status
+        - summary
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        type:
+          type: string
+          enum: [WORKSHOP, ACTIVITY, INSTAGRAM]
+        status:
+          type: string
+          enum: [UPCOMING, COMPLETED]
+        category:
+          type: string
+        eventDate:
+          type: string
+        eventTime:
+          type: string
+        location:
+          type: string
+        summary:
+          type: string
+        content:
+          type: string
+        coverImageUrl:
+          type: string
+        galleryImages:
+          type: string
+        instagramUrl:
+          type: string
+        ctaText:
+          type: string
+        ctaUrl:
+          type: string
+        isFeatured:
+          type: integer
+          enum: [0, 1]
+        isPublished:
+          type: integer
+          enum: [0, 1]
+        orderIndex:
+          type: integer
+
+    MediaAsset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+          example: workshop_photo.jpg
+        storageKey:
+          type: string
+          example: media/2026/workshop_photo.jpg
+        mimeType:
+          type: string
+          example: image/jpeg
+        sizeBytes:
+          type: integer
+          example: 245120
+        url:
+          type: string
+          example: /api/media/media/2026/workshop_photo.jpg
+        createdAt:
+          type: string
+          format: date-time
+
+    LabRegistrationRequest:
+      type: object
+      required:
+        - parentFullName
+        - parentPhone
+        - parentEmail
+        - childFullName
+        - childAge
+      properties:
+        parentFullName:
+          type: string
+          example: Jane Doe
+        parentPhone:
+          type: string
+          example: +961 70 123456
+        parentEmail:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        childFullName:
+          type: string
+          example: Leo Doe
+        childAge:
+          type: integer
+          example: 10
