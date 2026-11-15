@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -56,9 +57,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           onClick={handleLinkClick}
           className="flex items-center gap-3 group"
         >
-          <img
+          <Image
             src="/logo.jpg"
             alt="The Kidpreneur Journey"
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-xl object-contain bg-amber-400 p-0.5 shadow-md ring-1 ring-amber-300/40 group-hover:scale-105 transition-transform"
           />
           <div>

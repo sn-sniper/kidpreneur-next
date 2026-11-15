@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface AdminLayoutClientProps {
   activities: { name: string; href: string }[];
@@ -69,9 +70,11 @@ export const AdminLayoutClient: React.FC<AdminLayoutClientProps> = ({ activities
         {/* Mobile Top Navbar (Visible only on < md) */}
         <header className="md:hidden shrink-0 flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 text-white z-20 shadow-sm">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <img
+            <Image
               src="/logo.jpg"
               alt="Logo"
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-lg object-contain bg-amber-400 p-0.5 shadow-sm"
             />
             <div>
