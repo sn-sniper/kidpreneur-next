@@ -147,7 +147,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       <div className="p-3 border-t border-slate-800">
         <button 
           onClick={async () => {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/admin/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
             window.location.href = '/admin/login';
           }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 text-sm rounded-xl text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-colors"
